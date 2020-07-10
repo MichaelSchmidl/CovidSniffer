@@ -31,37 +31,123 @@
 #include "clockTask.h"
 #include "ws2812.h"
 
-#define MAX_COVID_ADDR_STORAGE 144
-static int nCovidAppAddr = 0;
-static esp_bd_addr_t covidAppAddr[MAX_COVID_ADDR_STORAGE];
-
-int16_t getNumberOfCovidBeacons( void )
+#define MAX_COVID_ADDR_STORAGE 150
+#define MAX_COVID_BEACON_AGE 60
+typedef struct
 {
-	return nCovidAppAddr;
+	esp_bd_addr_t addr;
+	uint16_t age;
+} covidAppBeaconInfo_t;
+static covidAppBeaconInfo_t covidAppBeaconInfo[MAX_COVID_ADDR_STORAGE];
+static uint16_t maxTotalCovidBeacons = 0;
+static uint32_t totalSumOfCovidBeacons = 0;
+
+static void _decreaseAgeOfCovidBeacons( void )
+{
+	int n;
+	for ( n = 0; n < MAX_COVID_ADDR_STORAGE; n++ )
+	{
+//        esp_log_buffer_hex("old:", covidAppBeaconInfo[n].addr, sizeof(esp_bd_addr_t));
+		if ( covidAppBeaconInfo[n].age > 0 )
+		{
+			covidAppBeaconInfo[n].age--;
+		}
+	}
 }
 
-void clrNumberOfCovidBeacons( void )
+uint16_t getNumberOfCovidBeacons( void )
 {
-	nCovidAppAddr = 0;
-	memset( covidAppAddr[nCovidAppAddr], 0 ,sizeof(esp_bd_addr_t));
+    uint16_t cnt = 0;
+	int n;
+	for ( n = 0; n < MAX_COVID_ADDR_STORAGE; n++ )
+	{
+		if ( covidAppBeaconInfo[n].age > 0 )
+		{
+			cnt++;
+		}
+	}
+
+	return cnt;
 }
 
-static void addNewAddr( esp_bd_addr_t newAddr )
+uint16_t getNumberOfActiveCovidBeacons( void )
+{
+	_decreaseAgeOfCovidBeacons();
+    uint16_t cnt = 0;
+	int n;
+	for ( n = 0; n < MAX_COVID_ADDR_STORAGE; n++ )
+	{
+		if ( covidAppBeaconInfo[n].age > MAX_COVID_BEACON_AGE / 2 )
+		{
+			cnt++;
+		}
+	}
+
+	return cnt;
+}
+
+uint16_t getAgeOfCovidBeacon( uint32_t n )
+{
+	return covidAppBeaconInfo[n].age;
+}
+
+uint16_t getMaxCovidBeacons( void )
+{
+	return maxTotalCovidBeacons;
+}
+
+uint16_t getNumberOfPossibleCovidBeacons( void )
+{
+	return MAX_COVID_ADDR_STORAGE;
+}
+
+uint32_t getTotalSumOfCovidBeacons( void )
+{
+	return totalSumOfCovidBeacons;
+}
+
+void clrAllCovidBeacons( void )
+{
+	int n;
+	for ( n = 0; n < MAX_COVID_ADDR_STORAGE; n++ )
+	{
+		memset( &covidAppBeaconInfo[n], 0 ,sizeof(covidAppBeaconInfo_t));
+	}
+	maxTotalCovidBeacons = 0;
+	totalSumOfCovidBeacons = 0;
+}
+
+static void _gotNewAddr( esp_bd_addr_t newAddr )
 {
 	int n;
 //    esp_log_buffer_hex("new:", newAddr, sizeof(esp_bd_addr_t));
-	for ( n = 0; n < nCovidAppAddr; n++ )
+	for ( n = 0; n < MAX_COVID_ADDR_STORAGE; n++ )
 	{
-//        esp_log_buffer_hex("old:", covidAppAddr[n], sizeof(esp_bd_addr_t));
-		if ( 0 == memcmp( newAddr, covidAppAddr[n], sizeof(esp_bd_addr_t) ) )
+//        esp_log_buffer_hex("old:", covidAppBeaconInfo[n].addr, sizeof(esp_bd_addr_t));
+		if ( 0 == memcmp( newAddr, covidAppBeaconInfo[n].addr, sizeof(esp_bd_addr_t) ) )
 		{
+			if (covidAppBeaconInfo[n].age < MAX_COVID_BEACON_AGE )
+			{
+				covidAppBeaconInfo[n].age += 5;
+				ESP_LOGI(__func__, "%d=%d", n, covidAppBeaconInfo[n].age);
+			}
 			return;
 		}
 	}
-	if ( n < (MAX_COVID_ADDR_STORAGE - 1))
+	for ( n = 0; n < MAX_COVID_ADDR_STORAGE; n++ )
 	{
-		nCovidAppAddr++;
-		memcpy( covidAppAddr[n], newAddr, sizeof(esp_bd_addr_t));
+		if ( covidAppBeaconInfo[n].age == 0 )
+		{
+			memcpy( covidAppBeaconInfo[n].addr, newAddr, sizeof(esp_bd_addr_t));
+			covidAppBeaconInfo[n].age = MAX_COVID_BEACON_AGE;
+			ESP_LOGI(__func__, "%d=%d", n, covidAppBeaconInfo[n].age);
+			if ( n >= maxTotalCovidBeacons )
+			{
+				maxTotalCovidBeacons = n+1;
+			}
+			totalSumOfCovidBeacons++;
+			return;
+		}
 	}
 }
 
@@ -110,7 +196,7 @@ static void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t* par
 //                			ESP_LOGI(__func__, "---- CovidApp Beacon ----");
 //                            esp_log_buffer_hex("Addr:", scan_result->scan_rst.bda, ESP_BD_ADDR_LEN);
 //                            esp_log_buffer_hex("Data: ", scan_result->scan_rst.ble_adv, scan_result->scan_rst.adv_data_len);
-                            addNewAddr( scan_result->scan_rst.bda );
+                            _gotNewAddr( scan_result->scan_rst.bda );
 						}
                 	}
                     break;
@@ -152,6 +238,7 @@ void covid_sniffer_init(void)
     esp_bluedroid_init();
     esp_bluedroid_enable();
     covid_sniffer_appRegister();
+    clrAllCovidBeacons();
 }
 
 void app_main()

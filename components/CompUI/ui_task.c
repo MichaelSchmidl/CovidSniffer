@@ -13,8 +13,13 @@
 
 static QueueHandle_t hDiagCcontrolQueue = NULL;
 
-int16_t getNumberOfCovidBeacons( void );
-void clrNumberOfCovidBeacons( void );
+uint16_t getNumberOfCovidBeacons( void );
+uint16_t getNumberOfActiveCovidBeacons( void );
+uint16_t getAgeOfCovidBeacon( uint32_t n );
+uint16_t getNumberOfPossibleCovidBeacons( void );
+uint16_t getMaxCovidBeacons( void );
+uint32_t getTotalSumOfCovidBeacons( void );
+void clrAllCovidBeacons( void );
 
 uint32_t FreeSpaceBaseline = 0UL;
 uint32_t BeaconNumber = 0UL;
@@ -519,21 +524,78 @@ void updateFreeSizeDeltaFieldCB( void )
 }
 
 
-void updateBeaconNrFieldCB( void )
+void _updateActiveBeaconNrFieldCB( void )
 {
-    char szTmp[20];
+    char szTmp[40];
+
+    snprintf(szTmp, sizeof(szTmp), "%d", getNumberOfActiveCovidBeacons());
+    _fg = pCurrentFieldToUpdate->foregroundColorValue;
+    _bg = pCurrentFieldToUpdate->backgroundColor;
+    TFT_setFont( pCurrentFieldToUpdate->valueFont, NULL );
+    TFT_fillRect( pCurrentFieldToUpdate->xPosOfValue,
+                  pCurrentFieldToUpdate->yPosOfValue,
+                  TFT_getStringWidth("00000000"),
+                  TFT_getfontheight(),
+                  _bg );
+    TFT_print( szTmp,
+    		   pCurrentFieldToUpdate->xPosOfValue,
+               pCurrentFieldToUpdate->yPosOfValue);
+}
+
+
+void _updateTotalBeaconNrFieldCB( void )
+{
+    char szTmp[40];
 
     snprintf(szTmp, sizeof(szTmp), "%d", getNumberOfCovidBeacons());
     _fg = pCurrentFieldToUpdate->foregroundColorValue;
     _bg = pCurrentFieldToUpdate->backgroundColor;
     TFT_setFont( pCurrentFieldToUpdate->valueFont, NULL );
     TFT_fillRect( pCurrentFieldToUpdate->xPosOfValue,
-            pCurrentFieldToUpdate->yPosOfValue,
+                  pCurrentFieldToUpdate->yPosOfValue,
                   TFT_getStringWidth("00000000"),
                   TFT_getfontheight(),
                   _bg );
     TFT_print( szTmp,
-               pCurrentFieldToUpdate->xPosOfValue,
+    		   pCurrentFieldToUpdate->xPosOfValue,
+               pCurrentFieldToUpdate->yPosOfValue);
+}
+
+
+void _updateMaxCovidBeaconsCB( void )
+{
+    char szTmp[40];
+
+    snprintf(szTmp, sizeof(szTmp), "%d", getMaxCovidBeacons());
+    _fg = pCurrentFieldToUpdate->foregroundColorValue;
+    _bg = pCurrentFieldToUpdate->backgroundColor;
+    TFT_setFont( pCurrentFieldToUpdate->valueFont, NULL );
+    TFT_fillRect( pCurrentFieldToUpdate->xPosOfValue,
+                  pCurrentFieldToUpdate->yPosOfValue,
+                  TFT_getStringWidth("00000000"),
+                  TFT_getfontheight(),
+                  _bg );
+    TFT_print( szTmp,
+    		   pCurrentFieldToUpdate->xPosOfValue,
+               pCurrentFieldToUpdate->yPosOfValue);
+}
+
+
+void _updateTotalSumOfBeaconsCB( void )
+{
+    char szTmp[40];
+
+    snprintf(szTmp, sizeof(szTmp), "%d", getTotalSumOfCovidBeacons());
+    _fg = pCurrentFieldToUpdate->foregroundColorValue;
+    _bg = pCurrentFieldToUpdate->backgroundColor;
+    TFT_setFont( pCurrentFieldToUpdate->valueFont, NULL );
+    TFT_fillRect( pCurrentFieldToUpdate->xPosOfValue,
+                  pCurrentFieldToUpdate->yPosOfValue,
+                  TFT_getStringWidth("00000000"),
+                  TFT_getfontheight(),
+                  _bg );
+    TFT_print( szTmp,
+    		   pCurrentFieldToUpdate->xPosOfValue,
                pCurrentFieldToUpdate->yPosOfValue);
 }
 
@@ -610,17 +672,56 @@ frameDef_t SysInfoFrame = {
 
 framefield_t CovidInfoFields[] = {
 	{
-		.xOffset = XFIELD3_2,
+		.xOffset = XFIELD4_1,
 		.fieldLine = 1,
 		.maxFieldWidth = FIELD4_WIDTH,
 		.backgroundColor = _TFT_BLACK,
 		.foregroundColorName = _TFT_WHITE,
 		.foregroundColorValue = _TFT_CYAN,
-		.szName = "",
-		.szInitialValue = "---",
+		.szName = "Active",
+		.szInitialValue = "",
 		.nameFont = UBUNTU16_FONT,
-		.valueFont = MINYA24_FONT,//TOONEY32_FONT,
-		.updateFieldValueCB = updateBeaconNrFieldCB
+		.valueFont = UBUNTU16_FONT,
+		.updateFieldValueCB = _updateActiveBeaconNrFieldCB
+	},
+	{
+		.xOffset = XFIELD4_2,
+		.fieldLine = 1,
+		.maxFieldWidth = FIELD4_WIDTH,
+		.backgroundColor = _TFT_BLACK,
+		.foregroundColorName = _TFT_WHITE,
+		.foregroundColorValue = _TFT_CYAN,
+		.szName = "Total",
+		.szInitialValue = "",
+		.nameFont = UBUNTU16_FONT,
+		.valueFont = UBUNTU16_FONT,
+		.updateFieldValueCB = _updateTotalBeaconNrFieldCB
+	},
+	{
+		.xOffset = XFIELD4_3,
+		.fieldLine = 1,
+		.maxFieldWidth = FIELD4_WIDTH,
+		.backgroundColor = _TFT_BLACK,
+		.foregroundColorName = _TFT_WHITE,
+		.foregroundColorValue = _TFT_CYAN,
+		.szName = "Max",
+		.szInitialValue = "",
+		.nameFont = UBUNTU16_FONT,
+		.valueFont = UBUNTU16_FONT,
+		.updateFieldValueCB = _updateMaxCovidBeaconsCB
+	},
+	{
+		.xOffset = XFIELD4_4,
+		.fieldLine = 1,
+		.maxFieldWidth = FIELD4_WIDTH,
+		.backgroundColor = _TFT_BLACK,
+		.foregroundColorName = _TFT_WHITE,
+		.foregroundColorValue = _TFT_CYAN,
+		.szName = "Sum",
+		.szInitialValue = "",
+		.nameFont = UBUNTU16_FONT,
+		.valueFont = UBUNTU16_FONT,
+		.updateFieldValueCB = _updateTotalSumOfBeaconsCB
 	},
     {
         .fieldLine = 0, // end of field list
@@ -644,7 +745,7 @@ frameDef_t CovidInfoFrame = {
 
 void _diag_task()
 {
-//    sdcardLogger_Init();
+    static uint8_t bBacklightOn = PIN_BCKL_ON;
 
     drawHeader();
     drawSoftKeys();
@@ -660,9 +761,6 @@ void _diag_task()
                                         pdMS_TO_TICKS(500UL) ) )
         {
 //            ESP_LOGI(__func__, "got %c", recv);
-
-            TFT_setFont( UBUNTU16_FONT, NULL );
-
             switch ( recv )
             {
                 case '!': // update infos
@@ -680,12 +778,14 @@ void _diag_task()
             }
             if ( gpio_get_level( M5_PIN_NUM_BTN_B ) == 0 )
             {
-            	clrNumberOfCovidBeacons();
-            	updateFrame( CovidInfoFrame );
+            	if ( bBacklightOn == PIN_BCKL_ON )
+            	{
+                	clrAllCovidBeacons();
+                	updateFrame( CovidInfoFrame );
+            	}
             }
 			if ( gpio_get_level( M5_PIN_NUM_BTN_C ) == 0 )
             {
-                static uint8_t bBacklightOn = PIN_BCKL_ON;
                 bBacklightOn ^= 1;
                 gpio_set_level(M5_PIN_NUM_BCKL, bBacklightOn);
             }

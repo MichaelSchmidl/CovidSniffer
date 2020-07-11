@@ -16,7 +16,7 @@
 #include "esp_system.h"
 #include "time.h"
 #include <math.h>
-#include "../CompUI/tftspi.h"
+#include "tftspi.h"
 
 #include "esp32/rom/tjpgd.h"
 #include "esp_heap_caps.h"

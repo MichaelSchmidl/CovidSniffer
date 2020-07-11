@@ -106,6 +106,11 @@ uint32_t getTotalSumOfCovidBeacons( void )
 	return totalSumOfCovidBeacons;
 }
 
+uint32_t getMaxAgeOfCovidBeacons( void )
+{
+	return MAX_COVID_BEACON_AGE;
+}
+
 void clrAllCovidBeacons( void )
 {
 	int n;
@@ -129,7 +134,11 @@ static void _gotNewAddr( esp_bd_addr_t newAddr )
 			if (covidAppBeaconInfo[n].age < MAX_COVID_BEACON_AGE )
 			{
 				covidAppBeaconInfo[n].age += 5;
-				ESP_LOGI(__func__, "%d=%d", n, covidAppBeaconInfo[n].age);
+				if ( covidAppBeaconInfo[n].age > MAX_COVID_BEACON_AGE )
+				{
+					covidAppBeaconInfo[n].age = MAX_COVID_BEACON_AGE;
+				}
+//				ESP_LOGI(__func__, "%d=%d", n, covidAppBeaconInfo[n].age);
 			}
 			return;
 		}
@@ -140,10 +149,10 @@ static void _gotNewAddr( esp_bd_addr_t newAddr )
 		{
 			memcpy( covidAppBeaconInfo[n].addr, newAddr, sizeof(esp_bd_addr_t));
 			covidAppBeaconInfo[n].age = MAX_COVID_BEACON_AGE;
-			ESP_LOGI(__func__, "%d=%d", n, covidAppBeaconInfo[n].age);
+//			ESP_LOGI(__func__, "%d=%d", n, covidAppBeaconInfo[n].age);
 			if ( n >= maxTotalCovidBeacons )
 			{
-				maxTotalCovidBeacons = n+1;
+				maxTotalCovidBeacons = n + 1;
 			}
 			totalSumOfCovidBeacons++;
 			return;

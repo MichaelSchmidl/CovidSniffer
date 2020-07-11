@@ -8,7 +8,7 @@
  *
 */
 
-#include "../CompUI/tftspi.h"
+#include "tftspi.h"
 
 #include <string.h>
 #include "esp_system.h"

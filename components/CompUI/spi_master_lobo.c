@@ -58,7 +58,7 @@ Main driver's function is 'spi_lobo_transfer_data()'
  #include "driver/spi_master_lobo.h"
  if the driver is located in esp-isf/components
 */
-#include "../CompUI/spi_master_lobo.h"
+#include "spi_master_lobo.h"
 
 #include "freertos/FreeRTOS.h"
 #include <string.h>

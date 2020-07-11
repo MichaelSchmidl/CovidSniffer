@@ -11,8 +11,8 @@
 #include "hardware.h"
 
 #include "sdkconfig.h"
-#include "../CompUI/spi_master_lobo.h"
-#include "../CompUI/stmpe610.h"
+#include "spi_master_lobo.h"
+#include "stmpe610.h"
 
 #define TOUCH_TYPE_NONE		0
 #define TOUCH_TYPE_XPT2046	1

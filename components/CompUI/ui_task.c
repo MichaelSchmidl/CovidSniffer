@@ -19,6 +19,7 @@ uint16_t getAgeOfCovidBeacon( uint32_t n );
 uint16_t getNumberOfPossibleCovidBeacons( void );
 uint16_t getMaxCovidBeacons( void );
 uint32_t getTotalSumOfCovidBeacons( void );
+uint32_t getMaxAgeOfCovidBeacons( void );
 void clrAllCovidBeacons( void );
 
 uint32_t FreeSpaceBaseline = 0UL;
@@ -399,7 +400,7 @@ void drawHeader( void )
 {
     TFT_setFont( SMALL_FONT, NULL );
     _fg = TFT_WHITE;
-    TFT_print("CovidSniffer V1.0", 0, 0 );
+    TFT_print("CovidSniffer V1.1", 0, 0 );
 }
 
 void drawSoftKeys( void )
@@ -429,7 +430,7 @@ void updateClock( void )
     uint32_t h = now % 24UL;
     now /= 24UL;
     uint32_t d = now;
-    snprintf(szTmp, sizeof(szTmp), "up %d %02d:%02d:%02d\n", d, h, m, s);
+    snprintf(szTmp, sizeof(szTmp), "up %d.%02d:%02d:%02d\n", d, h, m, s);
     _fg = TFT_GREEN;
     TFT_print(szTmp, RIGHT, 0);
 }
@@ -603,10 +604,49 @@ void _updateTotalSumOfBeaconsCB( void )
 ///////////////////////////////////////////////////////////////////////////////
 void initializeCovidBeaconHistoryCB( void )
 {
+	int yActive = (CurrentFrameToDraw.y + CurrentFrameToDraw.h) - 1 - ( getMaxAgeOfCovidBeacons() / 2 );
+	int yMax = (CurrentFrameToDraw.y + CurrentFrameToDraw.h) - 1 - getMaxAgeOfCovidBeacons();
+	TFT_drawFastHLine( CurrentFrameToDraw.x + 1,
+                       yActive,
+					   CurrentFrameToDraw.w - 2,
+					   TFT_DARKGREY);
+	TFT_drawFastHLine( CurrentFrameToDraw.x + 1,
+                       yMax,
+					   CurrentFrameToDraw.w - 2,
+					   TFT_DARKGREY);
 }
 
 void updateCovidBeaconHistoryCB( void )
 {
+	int n;
+	for (n = 0; n < getNumberOfPossibleCovidBeacons(); n++ )
+	{
+		int currentXoffset = (n * 4) + 3;
+		int x = pCurrentFieldToUpdate->xPosOfValue + currentXoffset;
+		int h = getAgeOfCovidBeacon(n);
+		int y = (CurrentFrameToDraw.y + CurrentFrameToDraw.h) - 1 - h;
+		int ymax = (CurrentFrameToDraw.y + CurrentFrameToDraw.h) - 1 - getMaxAgeOfCovidBeacons();
+		if ( x < ( DEFAULT_TFT_DISPLAY_WIDTH - 1 ))
+		{
+			TFT_drawFastVLine( x,
+		                       y,
+							   h,
+							   pCurrentFieldToUpdate->foregroundColorValue);
+			TFT_drawFastVLine( x,
+		                       ymax,
+							   y-ymax,
+							   pCurrentFieldToUpdate->backgroundColor);
+			x++;
+			TFT_drawFastVLine( x,
+		                       y,
+							   h,
+							   pCurrentFieldToUpdate->foregroundColorValue);
+			TFT_drawFastVLine( x,
+		                       ymax,
+							   y-ymax,
+							   pCurrentFieldToUpdate->backgroundColor);
+		}
+	}
 }
 
 
@@ -724,6 +764,19 @@ framefield_t CovidInfoFields[] = {
 		.updateFieldValueCB = _updateTotalSumOfBeaconsCB
 	},
     {
+        .xOffset = 1,
+        .fieldLine = 1,
+        .maxFieldWidth = DEFAULT_TFT_DISPLAY_WIDTH - 2,
+        .backgroundColor = _TFT_BLACK,
+        .foregroundColorName = _TFT_WHITE,
+        .foregroundColorValue = _TFT_GREEN,
+        .szName = "",
+        .szInitialValue = "",
+        .nameFont = SMALL_FONT,
+        .valueFont = SMALL_FONT,
+        .updateFieldValueCB = updateCovidBeaconHistoryCB
+    },
+    {
         .fieldLine = 0, // end of field list
         .updateFieldValueCB = NULL
     }
@@ -737,10 +790,10 @@ frameDef_t CovidInfoFrame = {
         .h = HFRAME2,
         .backgroundColor = _TFT_BLACK,
         .foregroundColor = _TFT_WHITE,
-        .szTitle = " CovidApps ",
+        .szTitle = " CovidApps (max 79) ",
         .titleFont = UBUNTU16_FONT,
         .frameFields = CovidInfoFields,
-        .initializeFrameCB = NULL
+        .initializeFrameCB = initializeCovidBeaconHistoryCB
 };
 
 void _diag_task()

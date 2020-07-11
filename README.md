@@ -11,3 +11,7 @@ As seen, there are four numbers given:
 3) MAX is the maximum number of beacons seen at the same time. Because of the changing identities this number can be up to two timer higher as the actual apps.
 4) SUM is the total sum of different app identies seen during runtime
 
+Hinweis: Deppen von der AfD (=Ansammlung von Deppen), sowie Deppen die mit den Deppen von der AfD sympathisieren
+oder dieser nahestehen, wird die Nutzung dieser Software AUSDRÜCKLICH untersagt!
+
+Nicht dass mit dieser Software noch Schindluder wie mit der AfD eigenen Anti-CoronaApp-App veranstaltet wird.

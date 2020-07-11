@@ -21,6 +21,8 @@ The total number of seen identities is 12 after nearly two hours of sniffing. Th
 Version 1.1: now a litte graph with the age of the first 79 beacons is shown. Here you can see that lost or changed identities get smaller
 and smaller until they are not consider active anymore (at half of the age). Finally if too old, they are completely removed even from the TOTAL number.
  
+<img src="2020-07-11 22.07.33.jpg">
+
 **Hinweis**: Deppen von der AfD (=**A**nsammlung **v**on **D**eppen - mit Rechtschreibschwäche!), sowie Deppen die mit den Deppen von der AfD sympathisieren
 oder dieser nahestehen, wird die Nutzung dieser Software AUSDRÜCKLICH untersagt! Sonst kommt von denen noch einer auf die Idee, damit 
 den gleichen Schindluder wie mit der AfD eigenen Anti-CoronaApp-App zu veranstalten.

@@ -11,7 +11,13 @@ As seen, there are four numbers given:
 3) MAX is the maximum number of beacons seen at the same time. Because of the changing identities this number can be up to two timer higher as the actual apps.
 4) SUM is the total sum of different app identies seen during runtime
 
-Hinweis: Deppen von der AfD (=Ansammlung von Deppen), sowie Deppen die mit den Deppen von der AfD sympathisieren
-oder dieser nahestehen, wird die Nutzung dieser Software AUSDRÜCKLICH untersagt!
+<img src="2020-07-11 14.45.08.jpg">
 
-Nicht dass mit dieser Software noch Schindluder wie mit der AfD eigenen Anti-CoronaApp-App veranstaltet wird.
+After running for a while, you see that the active apps remain two in my example. But the MAX number is now four, because both active
+apps changed their identity while sniffing. 
+
+The total number of seen identities is 12 after nearly two hours of sniffing. This is caused by the changes of identities about every 20min of the two apps in reach.
+
+**Hinweis**: Deppen von der AfD (=**A**nsammlung **v**on **D**eppen - mit Rechtschreibschwäche!), sowie Deppen die mit den Deppen von der AfD sympathisieren
+oder dieser nahestehen, wird die Nutzung dieser Software AUSDRÜCKLICH untersagt! Sonst kommt von denen noch einer auf die Idee, damit 
+den gleichen Schindluder wie mit der AfD eigenen Anti-CoronaApp-App zu veranstalten.

@@ -10,6 +10,8 @@
 #include "tft.h"
 #include "tftspi.h"
 
+#include "CompI2CDrv.h"
+#include "CompBattery.h"
 
 static QueueHandle_t hDiagCcontrolQueue = NULL;
 
@@ -218,6 +220,11 @@ static void _init( void )
 	gpio_set_direction(M5_PIN_NUM_BTN_B, GPIO_MODE_INPUT);
 	gpio_pad_select_gpio(M5_PIN_NUM_BTN_C);
 	gpio_set_direction(M5_PIN_NUM_BTN_C, GPIO_MODE_INPUT);
+
+    i2cInit( M5_PIN_NUM_SCL,
+             M5_PIN_NUM_SDA,
+             100000, // speed
+             I2C_PORT_NUM );
 }
 
 
@@ -400,7 +407,7 @@ void drawHeader( void )
 {
     TFT_setFont( SMALL_FONT, NULL );
     _fg = TFT_WHITE;
-    TFT_print("CovidSniffer V1.1", 0, 0 );
+    TFT_print("CovidSniffer V1.2", 0, 0 );
 }
 
 void drawSoftKeys( void )
@@ -420,7 +427,7 @@ void drawSoftKeys( void )
 
 void updateClock( void )
 {
-    char szTmp[20];
+    char szTmp[40];
     TFT_setFont( SMALL_FONT, NULL );
     TickType_t now = (xTaskGetTickCount() * portTICK_PERIOD_MS)  / 1000;
     uint32_t s = now % 60UL;
@@ -430,7 +437,30 @@ void updateClock( void )
     uint32_t h = now % 24UL;
     now /= 24UL;
     uint32_t d = now;
-    snprintf(szTmp, sizeof(szTmp), "up %d.%02d:%02d:%02d\n", d, h, m, s);
+    uint8_t batteryLevel = getBatteryLevelPercent( I2C_PORT_NUM );
+    char szBattery[7]="....";
+    switch (batteryLevel)
+    {
+        case 100:
+            snprintf( szBattery, sizeof(szBattery), "[####}");
+            break;
+        case 75:
+            snprintf( szBattery, sizeof(szBattery), "[###-}");
+            break;
+        case 50:
+            snprintf( szBattery, sizeof(szBattery), "[##--}");
+            break;
+        case 25:
+            snprintf( szBattery, sizeof(szBattery), "[#---}");
+            break;
+        case 0:
+            snprintf( szBattery, sizeof(szBattery), "[----}");
+            break;
+        default:
+            snprintf( szBattery, sizeof(szBattery), "????");
+            break;
+    }
+    snprintf(szTmp, sizeof(szTmp), "%s up %d.%02d:%02d:%02d\n", szBattery, d, h, m, s);
     _fg = TFT_GREEN;
     TFT_print(szTmp, RIGHT, 0);
 }
@@ -769,7 +799,7 @@ framefield_t CovidInfoFields[] = {
         .maxFieldWidth = DEFAULT_TFT_DISPLAY_WIDTH - 2,
         .backgroundColor = _TFT_BLACK,
         .foregroundColorName = _TFT_WHITE,
-        .foregroundColorValue = _TFT_GREEN,
+        .foregroundColorValue = _TFT_CYAN,
         .szName = "",
         .szInitialValue = "",
         .nameFont = SMALL_FONT,

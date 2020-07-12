@@ -23,11 +23,15 @@
 #define M5_PIN_NUM_BTN_B GPIO_NUM_38
 #define M5_PIN_NUM_BTN_C GPIO_NUM_37
 
+#define M5_PIN_NUM_SCL   GPIO_NUM_22
+#define M5_PIN_NUM_SDA   GPIO_NUM_21
 
 #define PRIORITY_NORMAL       ( configMAX_PRIORITIES / 2 )
 #define PRIORITY_LOWER        ( PRIORITY_NORMAL - 1 )
 #define PRIORITY_HIGHER       ( PRIORITY_NORMAL + 1 )
 #define PRIORITY_EVEN_LOWER   ( PRIORITY_LOWER - 1 )
 #define PRIORITY_EVEN_HIGHER  ( PRIORITY_HIGHER + 1 )
+
+#define I2C_PORT_NUM    I2C_NUM_1 // the I2C port number we will use to communicate with the connected chips
 
 #endif /*__HARDWARE_H__*/

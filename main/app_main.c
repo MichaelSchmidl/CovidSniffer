@@ -32,7 +32,7 @@
 #include "ws2812.h"
 
 #define MAX_COVID_ADDR_STORAGE 150
-#define MAX_COVID_BEACON_AGE 60
+#define MAX_COVID_BEACON_AGE 90
 typedef struct
 {
 	esp_bd_addr_t addr;
@@ -131,18 +131,16 @@ static void _gotNewAddr( esp_bd_addr_t newAddr )
 //        esp_log_buffer_hex("old:", covidAppBeaconInfo[n].addr, sizeof(esp_bd_addr_t));
 		if ( 0 == memcmp( newAddr, covidAppBeaconInfo[n].addr, sizeof(esp_bd_addr_t) ) )
 		{
+		    // we already know about this addr
 			if (covidAppBeaconInfo[n].age < MAX_COVID_BEACON_AGE )
 			{
-				covidAppBeaconInfo[n].age += 5;
-				if ( covidAppBeaconInfo[n].age > MAX_COVID_BEACON_AGE )
-				{
-					covidAppBeaconInfo[n].age = MAX_COVID_BEACON_AGE;
-				}
-//				ESP_LOGI(__func__, "%d=%d", n, covidAppBeaconInfo[n].age);
+			    // if we did not see it for a while, set it back to MAX_AGE
+				covidAppBeaconInfo[n].age = MAX_COVID_BEACON_AGE;
 			}
 			return;
 		}
 	}
+	// if the addr is unknown so far, store it
 	for ( n = 0; n < MAX_COVID_ADDR_STORAGE; n++ )
 	{
 		if ( covidAppBeaconInfo[n].age == 0 )
@@ -198,11 +196,24 @@ static void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t* par
             switch(scan_result->scan_rst.search_evt)
             {
                 case ESP_GAP_SEARCH_INQ_RES_EVT: {
+//                    I (40519) Beacon:: 00 00 00 00 3c e4 0a d2 7b 1b 00 00 02 00 00 00
+//                    I (40519) Beacon:: 01 00 00 00 03 00 00 00 d5 ff ff ff 02 01 1a 03
+//                    I (40519) Beacon:: 03 6f fd 17 16 6f fd fb 82 64 5e ee 14 8b 15 4f
+//                    I (40519) Beacon:: d4 79 35 52 3b 5d f9 9e d4 ec dc 00 00 00 00 00
+//                    I (40519) Beacon:: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+//                    I (40519) Beacon:: 00 00 00 00 00 00 00 00 00 00 00 00 1a 00 00 00
+//                    I (40519) Beacon:: 01 00 00 00 1f 00 00 00 01 00 00 00
+//                    I (40519)    ADV:: 02 01 1a 03 03 6f fd 17 16 6f fd fb 82 64 5e ee
+//                    I (40519)    ADV:: 14 8b 15 4f d4 79 35 52 3b 5d f9 9e d4 ec dc
+//                    ESP_LOGI(__func__, "---- Beacon ----");
+//                    esp_log_buffer_hex("Beacon:", scan_result, sizeof(esp_ble_gap_cb_param_t));
+//                    esp_log_buffer_hex("   ADV:", scan_result->scan_rst.ble_adv, scan_result->scan_rst.adv_data_len);
                 	if ( scan_result->scan_rst.adv_data_len >= 16 )
                 	{
-                		if (( scan_result->scan_rst.ble_adv[9] == 0x6F ) && ( scan_result->scan_rst.ble_adv[10] == 0xFD ))
+//                		if (( scan_result->scan_rst.ble_adv[9] == 0x6F ) && ( scan_result->scan_rst.ble_adv[10] == 0xFD ))
+                        if (( scan_result->scan_rst.ble_adv[5] == 0x6F ) && ( scan_result->scan_rst.ble_adv[6] == 0xFD ))
 						{
-//                			ESP_LOGI(__func__, "---- CovidApp Beacon ----");
+                			ESP_LOGI(__func__, "---- CovidApp Beacon ----");
 //                            esp_log_buffer_hex("Addr:", scan_result->scan_rst.bda, ESP_BD_ADDR_LEN);
 //                            esp_log_buffer_hex("Data: ", scan_result->scan_rst.ble_adv, scan_result->scan_rst.adv_data_len);
                             _gotNewAddr( scan_result->scan_rst.bda );

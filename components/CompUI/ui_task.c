@@ -407,7 +407,7 @@ void drawHeader( void )
 {
     TFT_setFont( SMALL_FONT, NULL );
     _fg = TFT_WHITE;
-    TFT_print("CovidSniffer V1.2", 0, 0 );
+    TFT_print("CovidSniffer V1.4", 0, 0 );
 }
 
 void drawSoftKeys( void )
@@ -855,7 +855,8 @@ void _diag_task()
         }
         else
         {
-            if ( gpio_get_level( M5_PIN_NUM_BTN_A ) == 0 )
+            if ( ( ( (xTaskGetTickCount() * portTICK_PERIOD_MS)  / 1000) < 5 ) ||
+                 ( gpio_get_level( M5_PIN_NUM_BTN_A ) == 0 ) )
             {
                 FreeSpaceBaseline= heap_caps_get_free_size(MALLOC_CAP_8BIT);
             }

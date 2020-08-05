@@ -1,3 +1,3 @@
-idf_component_register(SRCS "esp_eddystone_api.c"
-                            "esp_eddystone_demo.c"
+idf_component_register(SRCS "app_main.c"
+                            "clockTask.c"
                         INCLUDE_DIRS "")

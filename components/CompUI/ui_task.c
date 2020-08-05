@@ -17,6 +17,8 @@ static QueueHandle_t hDiagCcontrolQueue = NULL;
 
 uint16_t getNumberOfCovidBeacons( void );
 uint16_t getNumberOfActiveCovidBeacons( void );
+uint16_t getNumberOfActiveAppleCovidBeacons( void );
+uint16_t getNumberOfActiveAndroidCovidBeacons( void );
 uint16_t getAgeOfCovidBeacon( uint32_t n );
 uint16_t getNumberOfPossibleCovidBeacons( void );
 uint16_t getMaxCovidBeacons( void );
@@ -407,7 +409,7 @@ void drawHeader( void )
 {
     TFT_setFont( SMALL_FONT, NULL );
     _fg = TFT_WHITE;
-    TFT_print("CovidSniffer V1.4", 0, 0 );
+    TFT_print("CovidSniffer V1.5", 0, 0 );
 }
 
 void drawSoftKeys( void )
@@ -559,7 +561,7 @@ void _updateActiveBeaconNrFieldCB( void )
 {
     char szTmp[40];
 
-    snprintf(szTmp, sizeof(szTmp), "%d", getNumberOfActiveCovidBeacons());
+    snprintf(szTmp, sizeof(szTmp), "%d(%d/%d)", getNumberOfActiveCovidBeacons(), getNumberOfActiveAppleCovidBeacons(), getNumberOfActiveAndroidCovidBeacons());
     _fg = pCurrentFieldToUpdate->foregroundColorValue;
     _bg = pCurrentFieldToUpdate->backgroundColor;
     TFT_setFont( pCurrentFieldToUpdate->valueFont, NULL );
@@ -651,7 +653,7 @@ void updateCovidBeaconHistoryCB( void )
 	int n;
 	for (n = 0; n < getNumberOfPossibleCovidBeacons(); n++ )
 	{
-		int currentXoffset = (n * 4) + 3;
+		int currentXoffset = (n * 3) + 1;
 		int x = pCurrentFieldToUpdate->xPosOfValue + currentXoffset;
 		int h = getAgeOfCovidBeacon(n);
 		int y = (CurrentFrameToDraw.y + CurrentFrameToDraw.h) - 1 - h;
@@ -675,6 +677,7 @@ void updateCovidBeaconHistoryCB( void )
 		                       ymax,
 							   y-ymax,
 							   pCurrentFieldToUpdate->backgroundColor);
+
 		}
 	}
 }
@@ -820,7 +823,7 @@ frameDef_t CovidInfoFrame = {
         .h = HFRAME2,
         .backgroundColor = _TFT_BLACK,
         .foregroundColor = _TFT_WHITE,
-        .szTitle = " CovidApps (max 79) ",
+        .szTitle = " CovidApps ",
         .titleFont = UBUNTU16_FONT,
         .frameFields = CovidInfoFields,
         .initializeFrameCB = initializeCovidBeaconHistoryCB

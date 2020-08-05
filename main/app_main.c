@@ -31,11 +31,17 @@
 #include "clockTask.h"
 #include "ws2812.h"
 
-#define MAX_COVID_ADDR_STORAGE 150
+#define MAX_COVID_ADDR_STORAGE 250
 #define MAX_COVID_BEACON_AGE 90
+typedef enum {
+    unknown = 0,
+    apple = 1,
+    android = 2
+} covidBeaconType_t;
 typedef struct
 {
 	esp_bd_addr_t addr;
+	covidBeaconType_t beaconType;
 	uint16_t age;
 } covidAppBeaconInfo_t;
 static covidAppBeaconInfo_t covidAppBeaconInfo[MAX_COVID_ADDR_STORAGE];
@@ -86,6 +92,44 @@ uint16_t getNumberOfActiveCovidBeacons( void )
 	return cnt;
 }
 
+uint16_t getNumberOfActiveAppleCovidBeacons( void )
+{
+    uint16_t cnt = 0;
+    int n;
+    for ( n = 0; n < MAX_COVID_ADDR_STORAGE; n++ )
+    {
+        if ( covidAppBeaconInfo[n].age > MAX_COVID_BEACON_AGE / 2 )
+        {
+            if ( covidAppBeaconInfo[n].beaconType == apple )
+            {
+                cnt++;
+            }
+        }
+    }
+
+    return cnt;
+}
+
+
+uint16_t getNumberOfActiveAndroidCovidBeacons( void )
+{
+    uint16_t cnt = 0;
+    int n;
+    for ( n = 0; n < MAX_COVID_ADDR_STORAGE; n++ )
+    {
+        if ( covidAppBeaconInfo[n].age > MAX_COVID_BEACON_AGE / 2 )
+        {
+            if ( covidAppBeaconInfo[n].beaconType == android )
+            {
+                cnt++;
+            }
+        }
+    }
+
+    return cnt;
+}
+
+
 uint16_t getAgeOfCovidBeacon( uint32_t n )
 {
 	return covidAppBeaconInfo[n].age;
@@ -122,7 +166,7 @@ void clrAllCovidBeacons( void )
 	totalSumOfCovidBeacons = 0;
 }
 
-static void _gotNewAddr( esp_bd_addr_t newAddr )
+static void _gotNewAddr( esp_bd_addr_t newAddr, covidBeaconType_t beaconType )
 {
 	int n;
 //    esp_log_buffer_hex("new:", newAddr, sizeof(esp_bd_addr_t));
@@ -147,6 +191,7 @@ static void _gotNewAddr( esp_bd_addr_t newAddr )
 		{
 			memcpy( covidAppBeaconInfo[n].addr, newAddr, sizeof(esp_bd_addr_t));
 			covidAppBeaconInfo[n].age = MAX_COVID_BEACON_AGE;
+			covidAppBeaconInfo[n].beaconType = beaconType;
 //			ESP_LOGI(__func__, "%d=%d", n, covidAppBeaconInfo[n].age);
 			if ( n >= maxTotalCovidBeacons )
 			{
@@ -174,6 +219,7 @@ static esp_ble_scan_params_t ble_scan_params = {
 static void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t* param)
 {
     esp_err_t err;
+    covidBeaconType_t beaconType = unknown;
 
     switch(event)
     {
@@ -210,13 +256,21 @@ static void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t* par
 //                    esp_log_buffer_hex("   ADV:", scan_result->scan_rst.ble_adv, scan_result->scan_rst.adv_data_len);
                 	if ( scan_result->scan_rst.adv_data_len >= 16 )
                 	{
-//                		if (( scan_result->scan_rst.ble_adv[9] == 0x6F ) && ( scan_result->scan_rst.ble_adv[10] == 0xFD ))
+                		if (( scan_result->scan_rst.ble_adv[2] == 0x6F ) && ( scan_result->scan_rst.ble_adv[3] == 0xFD ))
+                        {
+                		    beaconType = android;
+//                            ESP_LOGI(__func__, "---- androidCovidApp Beacon ----");
+                        }
                         if (( scan_result->scan_rst.ble_adv[5] == 0x6F ) && ( scan_result->scan_rst.ble_adv[6] == 0xFD ))
 						{
-                			ESP_LOGI(__func__, "---- CovidApp Beacon ----");
+                            beaconType = apple;
+//                            ESP_LOGI(__func__, "---- appleCovidApp Beacon ----");
+						}
+                        if ( beaconType != unknown )
+                        {
 //                            esp_log_buffer_hex("Addr:", scan_result->scan_rst.bda, ESP_BD_ADDR_LEN);
 //                            esp_log_buffer_hex("Data: ", scan_result->scan_rst.ble_adv, scan_result->scan_rst.adv_data_len);
-                            _gotNewAddr( scan_result->scan_rst.bda );
+                            _gotNewAddr( scan_result->scan_rst.bda, beaconType );
 						}
                 	}
                     break;

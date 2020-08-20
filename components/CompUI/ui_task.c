@@ -12,6 +12,7 @@
 
 #include "CompI2CDrv.h"
 #include "CompBattery.h"
+#include "CompPWMDrv.h"
 
 static QueueHandle_t hDiagCcontrolQueue = NULL;
 
@@ -840,11 +841,13 @@ frameDef_t CovidInfoFrame = {
 
 void _diag_task()
 {
-    static uint8_t bBacklightOn = PIN_BCKL_ON;
+    static uint16_t backlightPWM = 4095;
 
     drawHeader();
     drawSoftKeys();
     updateClock();
+
+    pwmSetDutyCycle(BL_PWM, backlightPWM);
 
     drawFrame( SysInfoFrame );
     drawFrame( CovidInfoFrame );
@@ -874,7 +877,7 @@ void _diag_task()
             }
             if ( gpio_get_level( M5_PIN_NUM_BTN_B ) == 0 )
             {
-            	if ( bBacklightOn == PIN_BCKL_ON )
+            	if ( backlightPWM != 0 ) // display must be ON to obey the BTN_B
             	{
                 	clrAllCovidBeacons();
                 	updateFrame( CovidInfoFrame );
@@ -882,8 +885,19 @@ void _diag_task()
             }
 			if ( gpio_get_level( M5_PIN_NUM_BTN_C ) == 0 )
             {
-                bBacklightOn ^= 1;
-                gpio_set_level(M5_PIN_NUM_BCKL, bBacklightOn);
+			    switch (backlightPWM)
+			    {
+			       case 0:
+			           backlightPWM = 128;
+			           break;
+                   case 128:
+                       backlightPWM = 4095;
+                       break;
+			       default:
+                       backlightPWM = 0;
+                       break;
+			    }
+			    pwmSetDutyCycle(BL_PWM, backlightPWM);
             }
             updateClock();
             updateFrame( SysInfoFrame );

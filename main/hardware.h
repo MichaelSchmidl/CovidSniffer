@@ -12,8 +12,8 @@
 
 #define M5_PIN_NUM_RST   GPIO_NUM_33     // GPIO used for RESET control (#16)
 #define M5_PIN_NUM_BCKL  GPIO_NUM_32     // GPIO used for backlight control
-#define PIN_BCKL_ON      1               // GPIO value for backlight ON
-#define PIN_BCKL_OFF     0               // GPIO value for backlight OFF
+#define setBCKL_ON      1                // GPIO value for backlight ON
+#define setBCKL_OFF     0                // GPIO value for backlight OFF
 
 #define M5_PIN_NUM_AUDIO GPIO_NUM_25
 
@@ -33,5 +33,16 @@
 #define PRIORITY_EVEN_HIGHER  ( PRIORITY_HIGHER + 1 )
 
 #define I2C_PORT_NUM    I2C_NUM_1 // the I2C port number we will use to communicate with the connected chips
+
+// PWM outputs by LEDC
+#define BL_PWM_LEDC_CHANNEL            LEDC_CHANNEL_0
+
+#define PWM_LEDC_MODE                  LEDC_HIGH_SPEED_MODE
+#define PWM_LEDC_TIMER                 LEDC_TIMER_1
+#define PWM_RESOLUTION                 LEDC_TIMER_12_BIT
+#define PWM_FREQUENCY                  10000
+#define PWM_REQUIRED_SIGNALS           1
+
+#define BL_PWM                         0
 
 #endif /*__HARDWARE_H__*/

@@ -16,7 +16,7 @@
 #include "esp_heap_caps.h"
 #include "soc/spi_reg.h"
 #include "driver/gpio.h"
-
+#include "CompPWMDrv.h"
 
 // ====================================================
 // ==== Global variables, default values ==============
@@ -877,10 +877,15 @@ void TFT_PinsInit()
 #if USE_TOUCH
     gpio_pad_select_gpio(PIN_NUM_TCS);
     gpio_set_direction(PIN_NUM_TCS, GPIO_MODE_OUTPUT);
-#endif    
+#endif
+
+#if 1
+    initPWMs();
+#else
     gpio_pad_select_gpio(M5_PIN_NUM_BCKL);
     gpio_set_direction(M5_PIN_NUM_BCKL, GPIO_MODE_OUTPUT);
-    gpio_set_level(M5_PIN_NUM_BCKL, PIN_BCKL_OFF);
+    gpio_set_level(M5_PIN_NUM_BCKL, setBCKL_OFF);
+#endif
 
     gpio_pad_select_gpio(M5_PIN_NUM_RST);
     gpio_set_direction(M5_PIN_NUM_RST, GPIO_MODE_OUTPUT);
@@ -936,7 +941,7 @@ void TFT_display_init()
 	TFT_pushColorRep(0, 0, _width-1, _height-1, (color_t){0,0,0}, (uint32_t)(_height*_width));
 
 	///Enable backlight
-    gpio_set_level(M5_PIN_NUM_BCKL, PIN_BCKL_ON);
+    gpio_set_level(M5_PIN_NUM_BCKL, setBCKL_ON);
 }
 
 

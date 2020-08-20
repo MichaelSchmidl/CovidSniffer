@@ -25,6 +25,7 @@ uint16_t getMaxCovidBeacons( void );
 uint32_t getTotalSumOfCovidBeacons( void );
 uint32_t getMaxAgeOfCovidBeacons( void );
 void clrAllCovidBeacons( void );
+uint32_t getExposureTimeOfCovidBeacon( uint32_t n );
 
 uint32_t FreeSpaceBaseline = 0UL;
 uint32_t BeaconNumber = 0UL;
@@ -297,6 +298,7 @@ typedef struct {
     color_t backgroundColor;
     color_t foregroundColorName;
     color_t foregroundColorValue;
+    color_t highlightColorValue;
     char szName[MAX_FIELD_NAME_LEN];
     char szInitialValue[MAX_FIELD_NAME_LEN];
     uint8_t nameFont;
@@ -409,7 +411,7 @@ void drawHeader( void )
 {
     TFT_setFont( SMALL_FONT, NULL );
     _fg = TFT_WHITE;
-    TFT_print("CovidSniffer V1.5", 0, 0 );
+    TFT_print("CovidSniffer V1.6", 0, 0 );
 }
 
 void drawSoftKeys( void )
@@ -658,12 +660,18 @@ void updateCovidBeaconHistoryCB( void )
 		int h = getAgeOfCovidBeacon(n);
 		int y = (CurrentFrameToDraw.y + CurrentFrameToDraw.h) - 1 - h;
 		int ymax = (CurrentFrameToDraw.y + CurrentFrameToDraw.h) - 1 - getMaxAgeOfCovidBeacons();
+	    color_t barColorValue = pCurrentFieldToUpdate->foregroundColorValue;
+	    if (getExposureTimeOfCovidBeacon(n) > (5UL * 60UL))
+	    {
+	        barColorValue = pCurrentFieldToUpdate->highlightColorValue;
+	    }
+
 		if ( x < ( DEFAULT_TFT_DISPLAY_WIDTH - 1 ))
 		{
 			TFT_drawFastVLine( x,
 		                       y,
 							   h,
-							   pCurrentFieldToUpdate->foregroundColorValue);
+							   barColorValue);
 			TFT_drawFastVLine( x,
 		                       ymax,
 							   y-ymax,
@@ -672,7 +680,7 @@ void updateCovidBeaconHistoryCB( void )
 			TFT_drawFastVLine( x,
 		                       y,
 							   h,
-							   pCurrentFieldToUpdate->foregroundColorValue);
+							   barColorValue);
 			TFT_drawFastVLine( x,
 		                       ymax,
 							   y-ymax,
@@ -803,6 +811,7 @@ framefield_t CovidInfoFields[] = {
         .backgroundColor = _TFT_BLACK,
         .foregroundColorName = _TFT_WHITE,
         .foregroundColorValue = _TFT_CYAN,
+        .highlightColorValue = _TFT_MAGENTA,
         .szName = "",
         .szInitialValue = "",
         .nameFont = SMALL_FONT,
@@ -823,7 +832,7 @@ frameDef_t CovidInfoFrame = {
         .h = HFRAME2,
         .backgroundColor = _TFT_BLACK,
         .foregroundColor = _TFT_WHITE,
-        .szTitle = " CovidApps ",
+        .szTitle = " CovidBeacons ",
         .titleFont = UBUNTU16_FONT,
         .frameFields = CovidInfoFields,
         .initializeFrameCB = initializeCovidBeaconHistoryCB

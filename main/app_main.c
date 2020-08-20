@@ -43,6 +43,8 @@ typedef struct
 	esp_bd_addr_t addr;
 	covidBeaconType_t beaconType;
 	uint16_t age;
+	uint32_t first_seen;
+	uint32_t last_seen;
 } covidAppBeaconInfo_t;
 static covidAppBeaconInfo_t covidAppBeaconInfo[MAX_COVID_ADDR_STORAGE];
 static uint16_t maxTotalCovidBeacons = 0;
@@ -130,6 +132,11 @@ uint16_t getNumberOfActiveAndroidCovidBeacons( void )
 }
 
 
+uint32_t getExposureTimeOfCovidBeacon( uint32_t n )
+{
+    return covidAppBeaconInfo[n].last_seen - covidAppBeaconInfo[n].first_seen;
+}
+
 uint16_t getAgeOfCovidBeacon( uint32_t n )
 {
 	return covidAppBeaconInfo[n].age;
@@ -169,6 +176,7 @@ void clrAllCovidBeacons( void )
 static void _gotNewAddr( esp_bd_addr_t newAddr, covidBeaconType_t beaconType )
 {
 	int n;
+    TickType_t now = (xTaskGetTickCount() * portTICK_PERIOD_MS)  / 1000UL;
 //    esp_log_buffer_hex("new:", newAddr, sizeof(esp_bd_addr_t));
 	for ( n = 0; n < MAX_COVID_ADDR_STORAGE; n++ )
 	{
@@ -180,6 +188,7 @@ static void _gotNewAddr( esp_bd_addr_t newAddr, covidBeaconType_t beaconType )
 			{
 			    // if we did not see it for a while, set it back to MAX_AGE
 				covidAppBeaconInfo[n].age = MAX_COVID_BEACON_AGE;
+	            covidAppBeaconInfo[n].last_seen = now;
 			}
 			return;
 		}
@@ -192,6 +201,8 @@ static void _gotNewAddr( esp_bd_addr_t newAddr, covidBeaconType_t beaconType )
 			memcpy( covidAppBeaconInfo[n].addr, newAddr, sizeof(esp_bd_addr_t));
 			covidAppBeaconInfo[n].age = MAX_COVID_BEACON_AGE;
 			covidAppBeaconInfo[n].beaconType = beaconType;
+		    covidAppBeaconInfo[n].first_seen = now;
+            covidAppBeaconInfo[n].last_seen = now;
 //			ESP_LOGI(__func__, "%d=%d", n, covidAppBeaconInfo[n].age);
 			if ( n >= maxTotalCovidBeacons )
 			{

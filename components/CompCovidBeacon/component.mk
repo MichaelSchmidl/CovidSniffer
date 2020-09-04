@@ -8,4 +8,5 @@
 #
 
 #include $(IDF_PATH)/make/component_common.mk
-COMPONENT_ADD_INCLUDEDIRS := . Interfaces ../../main ../CompBattery ../CompI2CDrv ../CompPWMDrv ../CompCovidBeacon
+
+COMPONENT_ADD_INCLUDEDIRS := .

@@ -13,20 +13,9 @@
 #include "CompI2CDrv.h"
 #include "CompBattery.h"
 #include "CompPWMDrv.h"
+#include "CompCovidBeacon.h"
 
 static QueueHandle_t hDiagCcontrolQueue = NULL;
-
-uint16_t getNumberOfCovidBeacons( void );
-uint16_t getNumberOfActiveCovidBeacons( void );
-uint16_t getNumberOfActiveAppleCovidBeacons( void );
-uint16_t getNumberOfActiveAndroidCovidBeacons( void );
-uint16_t getAgeOfCovidBeacon( uint32_t n );
-uint16_t getNumberOfPossibleCovidBeacons( void );
-uint16_t getMaxCovidBeacons( void );
-uint32_t getTotalSumOfCovidBeacons( void );
-uint32_t getMaxAgeOfCovidBeacons( void );
-void clrAllCovidBeacons( void );
-uint32_t getExposureTimeOfCovidBeacon( uint32_t n );
 
 uint32_t FreeSpaceBaseline = 0UL;
 uint32_t BeaconNumber = 0UL;
@@ -412,7 +401,7 @@ void drawHeader( void )
 {
     TFT_setFont( SMALL_FONT, NULL );
     _fg = TFT_WHITE;
-    TFT_print("CovidSniffer V1.6", 0, 0 );
+    TFT_print("CovidSniffer V1.7", 0, 0 );
 }
 
 void drawSoftKeys( void )
@@ -487,6 +476,14 @@ void updateClock( void )
 #define XFIELD4_2  (( 1 * FIELD4_WIDTH) + ( 3 * FIELD4_GAP ))
 #define XFIELD4_3  (( 2 * FIELD4_WIDTH) + ( 5 * FIELD4_GAP ))
 #define XFIELD4_4  (( 3 * FIELD4_WIDTH) + ( 7 * FIELD4_GAP ))
+
+#define FIELD5_WIDTH 50
+#define FIELD5_GAP ((DEFAULT_TFT_DISPLAY_WIDTH - (5 * FIELD5_WIDTH)) / (2*(5+1)))
+#define XFIELD5_1  (( 0 * FIELD5_WIDTH) + ( 1 * FIELD5_GAP ))
+#define XFIELD5_2  (( 1 * FIELD5_WIDTH) + ( 3 * FIELD5_GAP ))
+#define XFIELD5_3  (( 2 * FIELD5_WIDTH) + ( 5 * FIELD5_GAP ))
+#define XFIELD5_4  (( 3 * FIELD5_WIDTH) + ( 7 * FIELD5_GAP ))
+#define XFIELD5_5  (( 4 * FIELD5_WIDTH) + ( 9 * FIELD5_GAP ))
 
 #define YFRAME1 20
 #define HFRAME1 50
@@ -564,17 +561,36 @@ void _updateActiveBeaconNrFieldCB( void )
 {
     char szTmp[40];
 
-    snprintf(szTmp, sizeof(szTmp), "%d(%d/%d)", getNumberOfActiveCovidBeacons(), getNumberOfActiveAppleCovidBeacons(), getNumberOfActiveAndroidCovidBeacons());
+    snprintf(szTmp, sizeof(szTmp), "%d", getNumberOfActiveCovidBeacons());
     _fg = pCurrentFieldToUpdate->foregroundColorValue;
     _bg = pCurrentFieldToUpdate->backgroundColor;
     TFT_setFont( pCurrentFieldToUpdate->valueFont, NULL );
     TFT_fillRect( pCurrentFieldToUpdate->xPosOfValue,
                   pCurrentFieldToUpdate->yPosOfValue,
-                  TFT_getStringWidth("00000000"),
+                  TFT_getStringWidth("000000"),
                   TFT_getfontheight(),
                   _bg );
     TFT_print( szTmp,
     		   pCurrentFieldToUpdate->xPosOfValue,
+               pCurrentFieldToUpdate->yPosOfValue);
+}
+
+
+void _updateLongExposureNrFieldCB( void )
+{
+    char szTmp[40];
+
+    snprintf(szTmp, sizeof(szTmp), "%d", getNumberOfLongExposedBeacons());
+    _fg = pCurrentFieldToUpdate->foregroundColorValue;
+    _bg = pCurrentFieldToUpdate->backgroundColor;
+    TFT_setFont( pCurrentFieldToUpdate->valueFont, NULL );
+    TFT_fillRect( pCurrentFieldToUpdate->xPosOfValue,
+                  pCurrentFieldToUpdate->yPosOfValue,
+                  TFT_getStringWidth("000000"),
+                  TFT_getfontheight(),
+                  _bg );
+    TFT_print( szTmp,
+               pCurrentFieldToUpdate->xPosOfValue,
                pCurrentFieldToUpdate->yPosOfValue);
 }
 
@@ -589,7 +605,7 @@ void _updateTotalBeaconNrFieldCB( void )
     TFT_setFont( pCurrentFieldToUpdate->valueFont, NULL );
     TFT_fillRect( pCurrentFieldToUpdate->xPosOfValue,
                   pCurrentFieldToUpdate->yPosOfValue,
-                  TFT_getStringWidth("00000000"),
+                  TFT_getStringWidth("000000"),
                   TFT_getfontheight(),
                   _bg );
     TFT_print( szTmp,
@@ -608,7 +624,7 @@ void _updateMaxCovidBeaconsCB( void )
     TFT_setFont( pCurrentFieldToUpdate->valueFont, NULL );
     TFT_fillRect( pCurrentFieldToUpdate->xPosOfValue,
                   pCurrentFieldToUpdate->yPosOfValue,
-                  TFT_getStringWidth("00000000"),
+                  TFT_getStringWidth("000000"),
                   TFT_getfontheight(),
                   _bg );
     TFT_print( szTmp,
@@ -627,7 +643,7 @@ void _updateTotalSumOfBeaconsCB( void )
     TFT_setFont( pCurrentFieldToUpdate->valueFont, NULL );
     TFT_fillRect( pCurrentFieldToUpdate->xPosOfValue,
                   pCurrentFieldToUpdate->yPosOfValue,
-                  TFT_getStringWidth("00000000"),
+                  TFT_getStringWidth("000000"),
                   TFT_getfontheight(),
                   _bg );
     TFT_print( szTmp,
@@ -662,7 +678,7 @@ void updateCovidBeaconHistoryCB( void )
 		int y = (CurrentFrameToDraw.y + CurrentFrameToDraw.h) - 1 - h;
 		int ymax = (CurrentFrameToDraw.y + CurrentFrameToDraw.h) - 1 - getMaxAgeOfCovidBeacons();
 	    color_t barColorValue = pCurrentFieldToUpdate->foregroundColorValue;
-	    if (getExposureTimeOfCovidBeacon(n) > (5UL * 60UL))
+	    if (getExposureTimeOfCovidBeacon(n) > LONG_EXPOSURE_SECONDS )
 	    {
 	        barColorValue = pCurrentFieldToUpdate->highlightColorValue;
 	    }
@@ -746,7 +762,7 @@ frameDef_t SysInfoFrame = {
         .h = HFRAME1,
         .backgroundColor = _TFT_BLACK,
         .foregroundColor = _TFT_WHITE,
-        .szTitle = " System Infos ",
+        .szTitle = " Memory Info ",
         .titleFont = UBUNTU16_FONT,
         .frameFields = SysInfoFields,
         .initializeFrameCB = NULL
@@ -754,9 +770,9 @@ frameDef_t SysInfoFrame = {
 
 framefield_t CovidInfoFields[] = {
 	{
-		.xOffset = XFIELD4_1,
+		.xOffset = XFIELD5_1,
 		.fieldLine = 1,
-		.maxFieldWidth = FIELD4_WIDTH,
+		.maxFieldWidth = FIELD5_WIDTH,
 		.backgroundColor = _TFT_BLACK,
 		.foregroundColorName = _TFT_WHITE,
 		.foregroundColorValue = _TFT_CYAN,
@@ -767,22 +783,35 @@ framefield_t CovidInfoFields[] = {
 		.updateFieldValueCB = _updateActiveBeaconNrFieldCB
 	},
 	{
-		.xOffset = XFIELD4_2,
+		.xOffset = XFIELD5_2,
 		.fieldLine = 1,
-		.maxFieldWidth = FIELD4_WIDTH,
+		.maxFieldWidth = FIELD5_WIDTH,
 		.backgroundColor = _TFT_BLACK,
 		.foregroundColorName = _TFT_WHITE,
 		.foregroundColorValue = _TFT_CYAN,
-		.szName = "Total",
+		.szName = "Long",
 		.szInitialValue = "",
 		.nameFont = UBUNTU16_FONT,
 		.valueFont = UBUNTU16_FONT,
-		.updateFieldValueCB = _updateTotalBeaconNrFieldCB
+		.updateFieldValueCB = _updateLongExposureNrFieldCB
 	},
+    {
+        .xOffset = XFIELD5_3,
+        .fieldLine = 1,
+        .maxFieldWidth = FIELD5_WIDTH,
+        .backgroundColor = _TFT_BLACK,
+        .foregroundColorName = _TFT_WHITE,
+        .foregroundColorValue = _TFT_CYAN,
+        .szName = "Total",
+        .szInitialValue = "",
+        .nameFont = UBUNTU16_FONT,
+        .valueFont = UBUNTU16_FONT,
+        .updateFieldValueCB = _updateTotalBeaconNrFieldCB
+    },
 	{
-		.xOffset = XFIELD4_3,
+		.xOffset = XFIELD5_4,
 		.fieldLine = 1,
-		.maxFieldWidth = FIELD4_WIDTH,
+		.maxFieldWidth = FIELD5_WIDTH,
 		.backgroundColor = _TFT_BLACK,
 		.foregroundColorName = _TFT_WHITE,
 		.foregroundColorValue = _TFT_CYAN,
@@ -793,9 +822,9 @@ framefield_t CovidInfoFields[] = {
 		.updateFieldValueCB = _updateMaxCovidBeaconsCB
 	},
 	{
-		.xOffset = XFIELD4_4,
+		.xOffset = XFIELD5_5,
 		.fieldLine = 1,
-		.maxFieldWidth = FIELD4_WIDTH,
+		.maxFieldWidth = FIELD5_WIDTH,
 		.backgroundColor = _TFT_BLACK,
 		.foregroundColorName = _TFT_WHITE,
 		.foregroundColorValue = _TFT_CYAN,

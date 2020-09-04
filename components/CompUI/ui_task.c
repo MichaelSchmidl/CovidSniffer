@@ -812,7 +812,7 @@ framefield_t CovidInfoFields[] = {
         .backgroundColor = _TFT_BLACK,
         .foregroundColorName = _TFT_WHITE,
         .foregroundColorValue = _TFT_CYAN,
-        .highlightColorValue = _TFT_MAGENTA,
+        .highlightColorValue = _TFT_WHITE,
         .szName = "",
         .szInitialValue = "",
         .nameFont = SMALL_FONT,
@@ -888,9 +888,15 @@ void _diag_task()
 			    switch (backlightPWM)
 			    {
 			       case 0:
-			           backlightPWM = 128;
+			           backlightPWM = 512;
 			           break;
-                   case 128:
+                   case 512:
+//                       backlightPWM = 1024;
+//                       break;
+//                   case 1024:
+//                       backlightPWM = 2048;
+//                       break;
+//                   case 2048:
                        backlightPWM = 4095;
                        break;
 			       default:

@@ -263,7 +263,7 @@ static void _createQueue( void )
 }
 
 
-void UItask_sendMessage( uint8_t message )
+extern void UItask_sendMessage( uint8_t message )
 {
     if (pdPASS != xQueueSend( hDiagCcontrolQueue,
                               &message,

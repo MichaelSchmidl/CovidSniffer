@@ -84,7 +84,29 @@ static void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t* par
 //                    ESP_LOGI(__func__, "---- Beacon ----");
 //                    esp_log_buffer_hex("Beacon:", scan_result, sizeof(esp_ble_gap_cb_param_t));
 //                    esp_log_buffer_hex("   ADV:", scan_result->scan_rst.ble_adv, scan_result->scan_rst.adv_data_len);
-                	if ( scan_result->scan_rst.adv_data_len >= 16 )
+#if 0 // ich verstehe nicht, warum mit der neuen Funktion der TASK WATCHDOG nach ein paar Sekunden zuschlägt.
+                    uint8_t len = 0;
+                    uint8_t typeData = 0;
+                    for (uint8_t n = 0; n < scan_result->scan_rst.adv_data_len; n += len )
+                    {
+                        len = scan_result->scan_rst.ble_adv[n];
+                        typeData = scan_result->scan_rst.ble_adv[n+1];
+                        if ( ( n + len ) < scan_result->scan_rst.adv_data_len)
+                        {
+//                            esp_log_buffer_hex("  Data:", &(scan_result->scan_rst.ble_adv[n]), len);
+                            if (( len == 0x1A ) && ( typeData == 3 ))
+                            {
+                                if ( ( scan_result->scan_rst.ble_adv[n+3] == 0x6F ) && ( scan_result->scan_rst.ble_adv[n+4] == 0xFD ))
+                                {
+                                    beaconType = apple;
+                                    gotNewAddr( scan_result->scan_rst.bda, beaconType );
+//                                    ESP_LOGI(__func__, "---- CovidApp Beacon ----");
+                                }
+                            }
+                        }
+                    }
+#else
+                    if ( scan_result->scan_rst.adv_data_len >= 16 )
                 	{
                 		if (( scan_result->scan_rst.ble_adv[2] == 0x6F ) && ( scan_result->scan_rst.ble_adv[3] == 0xFD ))
                         {
@@ -103,6 +125,7 @@ static void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t* par
                             gotNewAddr( scan_result->scan_rst.bda, beaconType );
 						}
                 	}
+#endif
                     break;
                 }
                 default:

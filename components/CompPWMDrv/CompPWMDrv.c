@@ -6,7 +6,7 @@
  */
 
 #include <esp_log.h>
-#include "hardware.h"
+#include "../../main/hardware.h"
 #include "CompPWMDrv.h"
 
 static ledc_channel_config_t ledc_channel[PWM_REQUIRED_SIGNALS] = {

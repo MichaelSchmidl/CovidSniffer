@@ -1,7 +1,7 @@
-idf_component_register(
-   SRCS "CompPWMDrv.c"
-   INCLUDE_DIRS "."
-   REQUIRES main
-)
+set(COMPONENT_SRCS "CompPWMDrv.c")
+                            
+set(COMPONENT_ADD_INCLUDEDIRS ".")
+
+register_component()
                        
      

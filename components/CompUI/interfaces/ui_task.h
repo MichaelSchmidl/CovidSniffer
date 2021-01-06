@@ -1,5 +1,5 @@
-#ifndef APPLICATION_COMPONENTS_COMPDIAG_TASK_H_
-#define APPLICATION_COMPONENTS_COMPDIAG_TASK_H_
+#ifndef APPLICATION_COMPONENTS_UI_TASK_H_
+#define APPLICATION_COMPONENTS_UI_TASK_H_
 
 /*##*************************************************************************************************************************************************************
  *      Includes
@@ -34,9 +34,9 @@ extern void UItask_connect( void );
 /*!************************************************************************************************************************************************************
  * @brief send given message to diag_task
  *************************************************************************************************************************************************************/
-void UItask_sendMessage( uint8_t message );
+extern void UItask_sendMessage( uint8_t message );
 
 
-#endif /* APPLICATION_COMPONENTS_COMPDIAG_TASK_H_ */
+#endif /* APPLICATION_COMPONENTS_UI_TASK_H_ */
 
 

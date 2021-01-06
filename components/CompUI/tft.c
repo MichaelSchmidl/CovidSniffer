@@ -5,7 +5,7 @@
  *  Module supporting SPI TFT displays based on ILI9341 & ILI9488 controllers
 */
 
-#include "../CompUI/tft.h"
+#include "tft.h"
 
 #include <stdio.h>
 #include <errno.h>
